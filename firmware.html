@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Plus - Firmware Updates</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; }
+
+    /* Navbar */
+    .navbar {
+      display:flex; justify-content:space-between; align-items:center;
+      background:#003366; padding:15px 40px; color:#fff;
+    }
+    .navbar .logo { font-size:24px; font-weight:bold; letter-spacing:1px; }
+    .navbar ul { list-style:none; display:flex; margin:0; padding:0; align-items:center; }
+    .navbar ul li { margin:0 15px; }
+    .navbar ul li a { text-decoration:none; color:white; font-size:16px; }
+    .navbar ul li a:hover { text-decoration:underline; }
+    .navbar button {
+      border: 2px solid white;
+      padding: 8px 15px;
+      background: transparent;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.3s;
+      border-radius: 5px;
+    }
+    .navbar button:hover {
+      background: white;
+      color: #003366;
+    }
+
+    /* Content */
+    .container {
+      max-width:800px;
+      margin:40px auto;
+      padding:20px;
+      background:#cce0ff;
+      border-radius:15px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.1);
+    }
+
+    h1 { text-align:center; color:#003366; margin-bottom:20px; }
+    p { text-align:center; margin-bottom:20px; color:#333; }
+
+    ul {
+      list-style:none;
+      padding:0;
+    }
+    ul li {
+      margin:12px 0;
+    }
+    ul li a {
+      text-decoration:none;
+      font-size:16px;
+      font-weight:bold;
+      color:#004080;
+    }
+    ul li a:hover {
+      text-decoration:underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="logo">TEAM PLUS</div>
+    <ul>
+      <li><a href="dashboard.html">Home</a></li>
+      <li><a href="products.html">Shop</a></li>
+      <li><a href="downloads.html">Downloads</a></li>
+      <li><a href="#">Support</a></li>
+      <li><a href="#">Dealers</a></li>
+      <li><button onclick="logout()">Logout</button></li>
+    </ul>
+  </div>
+
+  <!-- Firmware content -->
+  <div class="container">
+    <h1>Firmware Updates</h1>
+    <p>Select your device to download the latest firmware package:</p>
+    <ul>
+      <li><a href="#">CANGate – Firmware Update Packages</a></li>
+      <li><a href="firmware-wt1-rr.html">Wheel Turtle Club (Battery Powered Model) – Firmware Update</a></li>
+      <li><a href="#">Wheel Turtle PRO (Hard Wired Model) – Firmware Update Package</a></li>
+      <li><a href="#">Brake Turtle PRO – Firmware Update Package</a></li>
+      <li><a href="#">Telelogger – Firmware Update Package</a></li>
+    </ul>
+  </div>
+
+  <!-- Auth Check Script -->
+  <script src="auth-check.js"></script>
+
+</body>
+</html>

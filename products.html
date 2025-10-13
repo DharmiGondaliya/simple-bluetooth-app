@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Plus - Products</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    /* Navbar */
+   .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #003366;
+  padding: 15px 40px;
+  color: white;
+}
+
+.navbar .logo {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.navbar ul li {
+  margin: 0 15px;
+}
+
+.navbar ul li a {
+  text-decoration: none;
+  color: white;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.navbar ul li a:hover {
+  text-decoration: underline;
+}
+
+
+
+    .contact-btn {
+      border: 2px solid white;
+      padding: 8px 15px;
+      background: transparent;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .contact-btn:hover {
+      background: white;
+      color: #003366;
+    }
+
+    /* Products Grid */
+    .products {
+      padding: 40px;
+    }
+    .products h1 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 30px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #cce0ff;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+    .card:hover {
+      background: #99c2ff;
+      transform: translateY(-5px);
+    }
+    .card img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    .card h2 {
+      font-size: 18px;
+      color: #003366;
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 15px;
+      color: #004080;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .card button {
+      background: #004080;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+    .card button:hover {
+      background: #0059b3;
+    }
+  </style>
+</head>
+<body>
+
+
+  <!-- Navbar -->
+<div class="navbar">
+  <div class="logo">TEAM PLUS</div>
+  <ul>
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="products.html">Shop</a></li>
+    <li><a href="downloads.html">Downloads</a></li>
+    <li><a href="#">Support</a></li>
+    <li><a href="#">Dealers</a></li>
+    <li>
+      <a href="index.html" title="Login">
+        <!-- login icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+          <path d="M10 17l5-5-5-5v10zm-7-13h8v2H5v14h6v2H3V4zm11-1h7v18h-7v-2h5V5h-5V3z"/>
+        </svg>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+
+
+  <!-- Products -->
+  <div class="products">
+    <h1>Available Products</h1>
+    <div class="grid">
+
+      <!-- Product Cards -->
+      <div class="card">
+        <img src="wheel-turtle-pro.jpg" alt="Wheel Turtle Pro">
+        <h2>Wheel Turtle Pro Tyre Temperature</h2>
+        <p>Version 2.3</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="wheel-turtle-club.jpg" alt="Wheel Turtle Club">
+        <h2>Wheel Turtle Club Tyre Temperature</h2>
+        <p>Version 1.8</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="brake-turtle-pro.jpg" alt="Brake Turtle Pro">
+        <h2>Brake Turtle Pro Brake Temperature</h2>
+        <p>Version 3.0</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="replacement-wheel-turtle-pro.jpg" alt="Replacement Wheel Turtle Pro">
+        <h2>Replacement Wheel Turtle Pro Sensor</h2>
+        <p>Version 1.2</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="cangate.jpg" alt="CANGate">
+        <h2>CANGate</h2>
+        <p>Version 4.1</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="replacement-brake-turtle-pro.jpg" alt="Replacement Brake Turtle Pro">
+        <h2>Replacement Brake Turtle Pro Sensor</h2>
+        <p>Version 2.0</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="replacement-wheel-turtle-club.jpg" alt="Replacement Wheel Turtle Club">
+        <h2>Replacement Wheel Turtle Club Sensor</h2>
+        <p>Version 1.5</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="external-tpms.jpg" alt="External Track Grade TPMS">
+        <h2>External Track Grade TPMS</h2>
+        <p>Version 3.6</p>
+        <button>Update</button>
+      </div>
+
+      <div class="card">
+        <img src="internal-tpms.jpg" alt="Internal Track Grade TPMS">
+        <h2>Internal Track Grade TPMS</h2>
+        <p>Version 2.7</p>
+        <button>Update</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function logout() {
+      alert("You have been logged out.");
+      window.location.href = "index.html";
+    }
+  </script>
+
+</body>
+</html>

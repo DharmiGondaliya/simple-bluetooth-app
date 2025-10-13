@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Plus - Admin Panel</title>
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #003366;
+      padding: 15px 40px;
+      color: white;
+    }
+
+    .navbar .logo {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .navbar ul {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+      align-items: center;
+    }
+
+    .navbar ul li {
+      margin: 0 15px;
+    }
+
+    .navbar ul li a {
+      text-decoration: none;
+      color: white;
+      font-size: 16px;
+    }
+
+    .navbar ul li a:hover {
+      text-decoration: underline;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #003366;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* Section Cards */
+    .section {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    }
+
+    .section h2 {
+      color: #003366;
+      margin-top: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #cce0ff;
+      padding-bottom: 10px;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      color: #003366;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #cce0ff;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #004080;
+    }
+
+    button {
+      background: #004080;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #0059b3;
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    .btn-danger:hover {
+      background: #c82333;
+    }
+
+    /* Directory List */
+    .directory-list {
+      margin-top: 20px;
+    }
+
+    .directory-item {
+      background: #f8f9fa;
+      border: 2px solid #cce0ff;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+    }
+
+    .directory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .directory-item h3 {
+      margin: 0;
+      color: #003366;
+      font-size: 18px;
+    }
+
+    .directory-item .dir-path {
+      margin: 5px 0;
+      color: #666;
+      font-size: 13px;
+    }
+
+    /* File List */
+    .file-list {
+      margin-top: 15px;
+      padding: 10px;
+      background: white;
+      border-radius: 5px;
+    }
+
+    .file-item {
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fafafa;
+    }
+
+    .file-info {
+      flex-grow: 1;
+    }
+
+    .file-name {
+      font-weight: bold;
+      color: #004080;
+      margin-bottom: 4px;
+    }
+
+    .file-meta {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .message {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    .message.success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      display: block;
+    }
+
+    .message.error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+      display: block;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 30px;
+      color: #999;
+      font-style: italic;
+    }
+
+    .refresh-btn {
+      background: #17a2b8;
+      padding: 8px 16px;
+      font-size: 13px;
+      margin-left: 10px;
+    }
+
+    .refresh-btn:hover {
+      background: #138496;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+  <div class="logo">TEAM PLUS ADMIN</div>
+  <ul>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="admin.html">Admin Panel</a></li>
+    <li><a href="firmware-wt1-rr.html">Firmware Update</a></li>
+  </ul>
+</div>
+
+<div class="container">
+  <h1>🔧 Firmware Management Portal</h1>
+
+  <!-- Messages -->
+  <div id="messageContainer"></div>
+
+  <!-- Create Directory Section -->
+  <div class="section">
+    <h2>📁 Create New Directory</h2>
+    <form id="createDirForm">
+      <div class="form-group">
+        <label for="newDirName">Directory Name:</label>
+        <input 
+          type="text" 
+          id="newDirName" 
+          placeholder="e.g., firmware 2025 or wheel-turtle-pro-v2" 
+          required
+        >
+        <small style="color: #666;">You can use letters, numbers, spaces, hyphens, and underscores</small>
+      </div>
+      <button type="submit">Create Directory</button>
+    </form>
+  </div>
+
+  <!-- Upload File Section -->
+  <div class="section">
+    <h2>📤 Upload Firmware File</h2>
+    <form id="uploadFileForm">
+      <div class="form-group">
+        <label for="uploadDir">Select Directory:</label>
+        <select id="uploadDir" required>
+          <option value="">-- Select a directory --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="fileUpload">Choose File (.bin only):</label>
+        <input 
+          type="file" 
+          id="fileUpload" 
+          accept=".bin" 
+          required
+        >
+        <small style="color: #666;">Max file size: 50MB</small>
+      </div>
+      <button type="submit" id="uploadBtn">Upload File</button>
+      <div id="uploadProgress" style="margin-top: 10px; display: none;">
+        <div style="background: #e9ecef; border-radius: 5px; height: 20px; overflow: hidden;">
+          <div id="uploadProgressBar" style="background: #28a745; height: 100%; width: 0%; transition: width 0.3s;"></div>
+        </div>
+        <small id="uploadProgressText">Uploading...</small>
+      </div>
+    </form>
+  </div>
+
+  <!-- Manage Directories Section -->
+  <div class="section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0;">📂 Current Directories & Files</h2>
+      <button class="refresh-btn" onclick="loadDirectories()">🔄 Refresh</button>
+    </div>
+    <div id="directoriesLoading" class="loading">Loading directories...</div>
+    <div id="directoriesList" class="directory-list"></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:3000';
+
+// DOM Elements
+const createDirForm = document.getElementById('createDirForm');
+const uploadFileForm = document.getElementById('uploadFileForm');
+const uploadDir = document.getElementById('uploadDir');
+const directoriesList = document.getElementById('directoriesList');
+const directoriesLoading = document.getElementById('directoriesLoading');
+const messageContainer = document.getElementById('messageContainer');
+const uploadProgress = document.getElementById('uploadProgress');
+const uploadProgressBar = document.getElementById('uploadProgressBar');
+const uploadProgressText = document.getElementById('uploadProgressText');
+
+// Utility Functions
+function showMessage(msg, type = 'success') {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `message ${type}`;
+  msgDiv.textContent = msg;
+  messageContainer.innerHTML = '';
+  messageContainer.appendChild(msgDiv);
+  
+  setTimeout(() => {
+    msgDiv.style.display = 'none';
+  }, 5000);
+  
+  // Scroll to top to see message
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function humanSize(bytes) {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let i = 0;
+  let size = bytes;
+  while (size >= 1024 && i < units.length - 1) {
+    size /= 1024;
+    i++;
+  }
+  return `${size.toFixed(1)} ${units[i]}`;
+}
+
+function formatDirectoryName(dirName) {
+  return dirName;
+}
+
+// Create Directory
+createDirForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const dirName = document.getElementById('newDirName').value.trim();
+
+  try {
+    const response = await fetch(`${API_BASE}/api/directories`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: dirName })
+    });
+
+    const data = await response.json();
+
+    if (data.ok) {
+      showMessage(`✅ Directory "${dirName}" created successfully!`, 'success');
+      createDirForm.reset();
+      await loadDirectories();
+    } else {
+      showMessage(`❌ ${data.error}`, 'error');
+    }
+  } catch (error) {
+    showMessage('❌ Network error creating directory', 'error');
+    console.error(error);
+  }
+});
+
+// Upload File
+uploadFileForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const directory = uploadDir.value;
+  const fileInput = document.getElementById('fileUpload');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    showMessage('❌ Please select a file', 'error');
+    return;
+  }
+
+  if (!directory) {
+    showMessage('❌ Please select a directory', 'error');
+    return;
+  }
+
+  if (!file.name.endsWith('.bin')) {
+    showMessage('❌ Only .bin files are allowed', 'error');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('directory', directory);  // IMPORTANT: directory must come FIRST
+  formData.append('file', file);
+
+  const uploadBtn = document.getElementById('uploadBtn');
+  uploadBtn.disabled = true;
+  uploadBtn.textContent = 'Uploading...';
+  uploadProgress.style.display = 'block';
+
+  try {
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percent = (e.loaded / e.total) * 100;
+        uploadProgressBar.style.width = percent + '%';
+        uploadProgressText.textContent = `Uploading: ${Math.round(percent)}%`;
+      }
+    });
+
+    xhr.addEventListener('load', async () => {
+      if (xhr.status === 200) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (data.ok) {
+            showMessage(`✅ File "${file.name}" uploaded successfully!`, 'success');
+            uploadFileForm.reset();
+            await loadDirectories();
+          } else {
+            showMessage(`❌ Upload failed: ${data.error || 'Unknown error'}`, 'error');
+            console.error('Upload error:', data);
+          }
+        } catch (parseError) {
+          showMessage('❌ Error parsing server response', 'error');
+          console.error('Parse error:', parseError, xhr.responseText);
+        }
+      } else {
+        let errorMsg = `HTTP ${xhr.status}`;
+        try {
+          const errorData = JSON.parse(xhr.responseText);
+          errorMsg = errorData.error || errorMsg;
+        } catch (e) {
+          errorMsg = xhr.responseText || errorMsg;
+        }
+        showMessage(`❌ Upload failed: ${errorMsg}`, 'error');
+        console.error('HTTP error:', xhr.status, xhr.responseText);
+      }
+      
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Upload File';
+      uploadProgress.style.display = 'none';
+      uploadProgressBar.style.width = '0%';
+    });
+
+    xhr.addEventListener('error', () => {
+      showMessage('❌ Network error during upload', 'error');
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = 'Upload File';
+      uploadProgress.style.display = 'none';
+    });
+
+    xhr.open('POST', `${API_BASE}/api/upload`);
+    xhr.send(formData);
+
+  } catch (error) {
+    showMessage('❌ Upload error', 'error');
+    console.error(error);
+    uploadBtn.disabled = false;
+    uploadBtn.textContent = 'Upload File';
+    uploadProgress.style.display = 'none';
+  }
+});
+
+// Delete File
+async function deleteFile(directory, filename) {
+  if (!confirm(`Are you sure you want to delete "${filename}"?\n\nThis action cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/files`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ directory, filename })
+    });
+
+    const data = await response.json();
+
+    if (data.ok) {
+      showMessage(`✅ File "${filename}" deleted successfully!`, 'success');
+      await loadDirectories();
+    } else {
+      showMessage(`❌ ${data.error}`, 'error');
+    }
+  } catch (error) {
+    showMessage('❌ Network error deleting file', 'error');
+    console.error(error);
+  }
+}
+
+// Delete Directory
+async function deleteDirectory(dirName) {
+  if (!confirm(`⚠️ WARNING: Are you sure you want to delete the directory "${dirName}" and ALL its files?\n\nThis action cannot be undone!`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/directories/${encodeURIComponent(dirName)}`, {
+      method: 'DELETE'
+    });
+
+    const data = await response.json();
+
+    if (data.ok) {
+      showMessage(`✅ Directory "${dirName}" deleted successfully!`, 'success');
+      await loadDirectories();
+    } else {
+      showMessage(`❌ ${data.error}`, 'error');
+    }
+  } catch (error) {
+    showMessage('❌ Network error deleting directory', 'error');
+    console.error(error);
+  }
+}
+
+// Load Directories
+async function loadDirectories() {
+  try {
+    directoriesLoading.style.display = 'block';
+    directoriesList.innerHTML = '';
+
+    const response = await fetch(`${API_BASE}/api/directories`);
+    const data = await response.json();
+
+    directoriesLoading.style.display = 'none';
+
+    if (data.ok && data.directories.length > 0) {
+      // Update upload directory dropdown
+      uploadDir.innerHTML = '<option value="">-- Select a directory --</option>';
+      data.directories.forEach(dir => {
+        const option = document.createElement('option');
+        option.value = dir;
+        option.textContent = dir;
+        uploadDir.appendChild(option);
+      });
+
+      // Render each directory
+      for (const dir of data.directories) {
+        await renderDirectory(dir);
+      }
+    } else {
+      directoriesList.innerHTML = '<div class="empty">📭 No directories found. Create one above to get started!</div>';
+    }
+  } catch (error) {
+    directoriesLoading.style.display = 'none';
+    directoriesList.innerHTML = '<div class="empty" style="color:#dc3545;">❌ Error loading directories. Make sure the server is running.</div>';
+    console.error(error);
+  }
+}
+
+// Render Directory
+async function renderDirectory(dirName) {
+  const dirDiv = document.createElement('div');
+  dirDiv.className = 'directory-item';
+
+  const dirHeader = document.createElement('div');
+  dirHeader.className = 'directory-header';
+
+  const dirInfo = document.createElement('div');
+  
+  const dirTitle = document.createElement('h3');
+  dirTitle.textContent = `📁 ${dirName}`;
+  
+  const dirPath = document.createElement('div');
+  dirPath.className = 'dir-path';
+  dirPath.textContent = `Path: public/firmware/${dirName}`;
+
+  dirInfo.appendChild(dirTitle);
+  dirInfo.appendChild(dirPath);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'btn-danger';
+  deleteBtn.textContent = '🗑️ Delete Directory';
+  deleteBtn.onclick = () => deleteDirectory(dirName);
+
+  dirHeader.appendChild(dirInfo);
+  dirHeader.appendChild(deleteBtn);
+  dirDiv.appendChild(dirHeader);
+
+  // Load files
+  try {
+    const response = await fetch(`${API_BASE}/api/files?directory=${encodeURIComponent(dirName)}`);
+    const data = await response.json();
+
+    if (data.ok && data.files.length > 0) {
+      const fileListDiv = document.createElement('div');
+      fileListDiv.className = 'file-list';
+      
+      const fileCount = document.createElement('div');
+      fileCount.style.marginBottom = '10px';
+      fileCount.style.fontWeight = 'bold';
+      fileCount.style.color = '#003366';
+      fileCount.textContent = `📄 ${data.files.length} file(s)`;
+      fileListDiv.appendChild(fileCount);
+
+      data.files.forEach(file => {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = 'file-item';
+
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'file-info';
+
+        const fileName = document.createElement('div');
+        fileName.className = 'file-name';
+        fileName.textContent = file.name;
+
+        const fileMeta = document.createElement('div');
+        fileMeta.className = 'file-meta';
+        fileMeta.textContent = `Size: ${humanSize(file.size)} | Modified: ${new Date(file.modified).toLocaleString()}`;
+
+        fileInfo.appendChild(fileName);
+        fileInfo.appendChild(fileMeta);
+
+        const deleteFileBtn = document.createElement('button');
+        deleteFileBtn.className = 'btn-danger';
+        deleteFileBtn.textContent = '🗑️ Delete';
+        deleteFileBtn.onclick = () => deleteFile(dirName, file.name);
+
+        fileDiv.appendChild(fileInfo);
+        fileDiv.appendChild(deleteFileBtn);
+        fileListDiv.appendChild(fileDiv);
+      });
+
+      dirDiv.appendChild(fileListDiv);
+    } else {
+      const emptyMsg = document.createElement('div');
+      emptyMsg.className = 'file-list';
+      emptyMsg.innerHTML = '<div class="empty" style="padding:15px;">📭 No files in this directory</div>';
+      dirDiv.appendChild(emptyMsg);
+    }
+  } catch (error) {
+    console.error('Error loading files for directory:', dirName, error);
+  }
+
+  directoriesList.appendChild(dirDiv);
+}
+
+// Load directories on page load
+window.addEventListener('DOMContentLoaded', loadDirectories);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team Plus - Login</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    /* Navbar */
+   .navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #003366;
+  padding: 15px 40px;
+  color: white;
+}
+
+.navbar .logo {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.navbar ul {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.navbar ul li {
+  margin: 0 15px;
+}
+
+.navbar ul li a {
+  text-decoration: none;
+  color: white;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.navbar ul li a:hover {
+  text-decoration: underline;
+}
+
+
+    /* Login Section */
+    .login-section {
+      text-align: center;
+      margin-top: 60px;
+    }
+    .login-section h2 {
+      font-size: 32px;
+      color: #333;
+      margin-bottom: 25px;
+    }
+    .login-box {
+      background: #cce0ff;
+      padding: 40px;
+      width: 400px;
+      margin: 0 auto;
+      border-radius: 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    }
+    .login-box label {
+      display: block;
+      text-align: left;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: #003366;
+      font-weight: bold;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 5px;
+      background: #0066cc;
+      color: white;
+      font-size: 16px;
+    }
+    .login-box input::placeholder {
+      color: #d9e6f2;
+    }
+    .login-box button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      background: #004080;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.3s;
+      width: 100%;
+    }
+    .login-box button:hover {
+      background: #0059b3;
+    }
+    .error-message {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+      text-align: center;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+ <!-- Navbar -->
+<div class="navbar">
+  <div class="logo">TEAM PLUS</div>
+  <ul>
+    <li><a href="dashboard.html">Home</a></li>
+    <li><a href="products.html">Shop</a></li>
+    <li><a href="downloads.html">Downloads</a></li>
+    <li><a href="#">Support</a></li>
+    <li><a href="#">Dealers</a></li>
+    <li><a href="index.html" title="Login">Login</a></li>
+  </ul>
+</div>
+
+
+
+  <!-- Login Section -->
+  <div class="login-section">
+    <h2>Login</h2>
+    <div class="login-box">
+
+      <!-- Step 1: Enter email -->
+      <form id="emailForm">
+        <label for="email">Enter your Email ID</label>
+        <input type="email" id="email" placeholder="example@domain.com" required>
+        <button type="submit">Send Code</button>
+      </form>
+
+      <!-- Step 2: Enter verification code -->
+      <form id="twoFAForm" class="hidden">
+        <label for="code">Enter the 6-digit code</label>
+        <input type="text" id="code" placeholder="------" maxlength="6" required>
+        <button type="submit">Verify</button>
+        <p class="error-message" id="errorMessage">Invalid code. Try again!</p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  const emailForm = document.getElementById("emailForm");
+  const twoFAForm = document.getElementById("twoFAForm");
+  const errorMessage = document.getElementById("errorMessage");
+  const emailInput = document.getElementById("email");
+
+  const API_BASE = "http://localhost:3000";
+
+  let identifier = "";
+
+  // Step 1: Submit email -> send code
+  emailForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    identifier = emailInput.value.trim();
+    if (!identifier) {
+      alert("Please enter your email");
+      return;
+    }
+
+    try {
+      const resp = await fetch(`${API_BASE}/auth/send-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          method: 'email', 
+          identifier,
+          role: 'user' // Default role for everyone
+        })
+      });
+      const data = await resp.json();
+      
+      if (data.ok) {
+        alert(`Verification code sent to ${identifier}.`);
+        emailForm.classList.add("hidden");
+        twoFAForm.classList.remove("hidden");
+      } else {
+        alert("Failed to send code: " + (data.error || "unknown error"));
+      }
+    } catch (err) {
+      alert("Network error sending code.");
+      console.error(err);
+    }
+  });
+
+  // Step 2: Verify code
+  twoFAForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const userCode = document.getElementById("code").value.trim();
+    if (!userCode) return;
+
+    try {
+      const resp = await fetch(`${API_BASE}/auth/verify-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, code: userCode })
+      });
+      const data = await resp.json();
+      
+      if (data.ok) {
+        // Store authentication data
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userRole', data.role);
+        localStorage.setItem('userEmail', data.email);
+        
+        alert("Code verified. Redirecting to Dashboard...");
+        window.location.href = "dashboard.html";
+      } else {
+        errorMessage.style.display = "block";
+      }
+    } catch (err) {
+      alert("Network error verifying code.");
+      console.error(err);
+    }
+  });
+</script>
+
+</body>
+</html>
