@@ -165,6 +165,64 @@ app.post('/auth/verify-token', (req, res) => {
     res.status(401).json({ valid: false, error: 'Invalid or expired token' });
   }
 });
+
+/* ------------- Admin-only send code (with email whitelist) ------------- */
+app.post('/auth/admin-send-code', async (req, res) => {
+  try {
+    const identifier = String(req.body?.identifier || '').trim().toLowerCase();
+    const role = String(req.body?.role || 'admin').trim().toLowerCase();
+    
+    if (!identifier || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)) {
+      return res.status(400).json({ error: 'Valid email required' });
+    }
+
+    // Check if email is in admin whitelist
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    
+    if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(identifier)) {
+      console.log(`Access denied for ${identifier} - not in admin whitelist`);
+      return res.status(403).json({ 
+        error: 'Access denied. This email is not authorized for admin access.' 
+      });
+    }
+    
+    const now = Date.now();
+    const prev = verifyStore.get(identifier);
+    if (prev && now - prev.lastSentAt < RESEND_COOLDOWN * 1000) {
+      const wait = Math.ceil((RESEND_COOLDOWN * 1000 - (now - prev.lastSentAt)) / 1000);
+      return res.status(429).json({ error: `Please wait ${wait}s before requesting again` });
+    }
+
+    const code = genCode();
+    verifyStore.set(identifier, { 
+      code, 
+      role,
+      expiresAt: now + CODE_TTL * 1000, 
+      lastSentAt: now, 
+      attempts: 0 
+    });
+
+    await mailer.sendMail({
+      from: process.env.SMTP_FROM || `admin@teamplus.cloud`,
+      to: identifier,
+      subject: 'Team Plus Admin - Verification Code',
+      text: `Your admin verification code is ${code}. It expires in ${Math.floor(CODE_TTL/60)} minutes.`,
+      html: `<div style="font-family:Arial,sans-serif">
+               <h2 style="color:#003366">Admin Login Verification</h2>
+               <p>Your verification code:</p>
+               <p style="font-size:32px;font-weight:700;letter-spacing:6px;color:#003366">${code}</p>
+               <p>Expires in ${Math.floor(CODE_TTL/60)} minutes.</p>
+               <p style="color:#666;font-size:12px">This code is for admin access only.</p>
+             </div>`
+    });
+
+    console.log(`✓ Admin verification code sent to ${identifier}`);
+    res.json({ ok: true, message: 'Code sent' });
+  } catch (e) {
+    console.error('admin-send-code error', e);
+    res.status(500).json({ error: 'Failed to send code' });
+  }
+});
 /* ============================================
    ADMIN API ENDPOINTS - Firmware Management
    ============================================ */
@@ -240,6 +298,7 @@ app.post('/api/directories', async (req, res) => {
     res.status(500).json({ ok: false, error: 'Failed to create directory' });
   }
 });
+
 
 // DELETE /api/directories/:name - Delete directory
 app.delete('/api/directories/:name', async (req, res) => {
@@ -345,6 +404,78 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   }
 });
 
+// PUT /api/files/rename - Rename a file
+app.put('/api/files/rename', async (req, res) => {
+  const { directory, oldName, newName } = req.body;
+  
+  // Validate inputs
+  if (!directory || !oldName || !newName) {
+    return res.json({ ok: false, error: 'Missing required fields' });
+  }
+  
+  if (!newName.endsWith('.bin')) {
+    return res.json({ ok: false, error: 'New filename must end with .bin' });
+  }
+  
+  const oldPath = path.join(FIRMWARE_DIR, directory, oldName);
+  const newPath = path.join(FIRMWARE_DIR, directory, newName);
+  
+  // Check if old file exists
+  if (!fsSync.existsSync(oldPath)) {
+    return res.json({ ok: false, error: 'Original file not found' });
+  }
+  
+  // Check if new filename already exists
+  if (fsSync.existsSync(newPath)) {
+    return res.json({ ok: false, error: 'A file with that name already exists' });
+  }
+  
+  try {
+    fsSync.renameSync(oldPath, newPath);
+    console.log(`✓ Renamed file: ${oldName} → ${newName} in ${directory}`);
+    res.json({ ok: true, message: 'File renamed successfully' });
+  } catch (error) {
+    console.error('Rename error:', error);
+    res.json({ ok: false, error: 'Failed to rename file' });
+  }
+});
+
+// PUT /api/directories/rename - Rename a directory
+app.put('/api/directories/rename', async (req, res) => {
+  const { oldName, newName } = req.body;
+  
+  if (!oldName || !newName) {
+    return res.json({ ok: false, error: 'Missing required fields' });
+  }
+  
+  const validName = /^[a-zA-Z0-9\s\-_]+$/.test(newName);
+  if (!validName) {
+    return res.json({ 
+      ok: false, 
+      error: 'Directory name can only contain letters, numbers, spaces, hyphens, and underscores' 
+    });
+  }
+  
+  const oldPath = path.join(FIRMWARE_DIR, oldName);
+  const newPath = path.join(FIRMWARE_DIR, newName);
+  
+  if (!fsSync.existsSync(oldPath)) {
+    return res.json({ ok: false, error: 'Original directory not found' });
+  }
+  
+  if (fsSync.existsSync(newPath)) {
+    return res.json({ ok: false, error: 'A directory with that name already exists' });
+  }
+  
+  try {
+    fsSync.renameSync(oldPath, newPath);
+    console.log(`✓ Renamed directory: ${oldName} → ${newName}`);
+    res.json({ ok: true, message: 'Directory renamed successfully' });
+  } catch (error) {
+    console.error('Directory rename error:', error);
+    res.json({ ok: false, error: 'Failed to rename directory' });
+  }
+});
 // DELETE /api/files - Delete a file
 app.delete('/api/files', async (req, res) => {
   try {
