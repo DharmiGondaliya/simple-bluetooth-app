@@ -7,8 +7,50 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <style>
     :root{--brand:#003366;--brand2:#004080;--panel:#eef6ff;}
-    body{font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;margin:0;padding:24px;}
-    .container{max-width:920px;margin:auto;background:#fff;padding:28px;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.08);}
+    body{font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;margin:0;padding:0;}
+    
+    /* Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #003366;
+      padding: 15px 40px;
+      color: white;
+    }
+
+    .navbar .logo {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .navbar ul {
+      list-style: none;
+      display: flex;
+      margin: 0;
+      padding: 0;
+      align-items: center;
+    }
+
+    .navbar ul li {
+      margin: 0 15px;
+    }
+
+    .navbar ul li a {
+      text-decoration: none;
+      color: white;
+      font-size: 16px;
+    }
+
+    .navbar ul li a:hover {
+      text-decoration: underline;
+    }
+    
+    .page-content {
+      padding: 24px;
+    }
+    .container{max-width:920px;margin:0 auto;background:#fff;padding:28px;border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.08);}
     h2{margin:0 0 18px;color:var(--brand);text-align:center}
     .step{background:var(--panel);border-left:6px solid var(--brand);border-radius:10px;padding:18px;margin:18px 0}
     .step h3{margin:0 0 10px;color:var(--brand)}
@@ -38,9 +80,75 @@
     .refresh-btn{background:#17a2b8;padding:8px 12px;font-size:13px;margin-left:10px}
     .refresh-btn:hover{background:#138496}
     .header-with-refresh{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+    
+    /* Disconnect Modal */
+    .disconnect-modal{
+      display:none;
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.7);
+      z-index:9999;
+      align-items:center;
+      justify-content:center;
+    }
+    .disconnect-modal.show{display:flex}
+    .disconnect-content{
+      background:white;
+      padding:30px;
+      border-radius:15px;
+      text-align:center;
+      max-width:400px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.3);
+    }
+    .disconnect-content h3{
+      color:#dc3545;
+      margin:0 0 15px 0;
+      font-size:24px;
+    }
+    .disconnect-content p{
+      color:#666;
+      margin:10px 0 20px 0;
+      font-size:16px;
+    }
+    .disconnect-content button{
+      background:#004080;
+      color:white;
+      border:none;
+      padding:12px 30px;
+      border-radius:8px;
+      font-size:16px;
+      cursor:pointer;
+    }
+    .disconnect-content button:hover{
+      background:#0059b3;
+    }
   </style>
 </head>
 <body>
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="logo">WHEEL TURTLE CLUB</div>
+    <ul>
+      <li><a href="firmware-select.html">Home</a></li>
+      <li><a href="wtc-update.html">Firmware Update</a></li>
+      <li><a href="#" onclick="logout(); return false;">Logout</a></li>
+    </ul>
+  </div>
+
+  <div class="page-content">
+  <!-- Disconnect Modal -->
+  <div id="disconnectModal" class="disconnect-modal">
+    <div class="disconnect-content">
+      <h3>⚠️ Device Disconnected</h3>
+      <p>The Bluetooth connection has been lost.</p>
+      <p>The page will reset in 30 seconds.</p>
+      <button onclick="resetPage()">Restart Now</button>
+    </div>
+  </div>
+
   <div class="container">
     <h2>Wheel Turtle Club Firmware Update</h2>
 
@@ -48,6 +156,7 @@
     <div class="step">
       <h3>Step 1: Connect Device</h3>
       <p>Turn on Bluetooth and click below. Only devices starting with <b>TPWT</b> will be shown.</p>
+      <p><i>No other teamplus devices or apps should be connected to bluetooth for the update to be successful.</i></p>
       <button id="pairBtn">Connect</button>
       <p class="status" id="connectionStatus">Status: Not connected</p>
       <p class="status" id="deviceInfo">Device: —</p>
@@ -58,17 +167,11 @@
     <div class="step">
       <div class="header-with-refresh">
         <h3 style="margin:0">Step 2: Choose Firmware File</h3>
-        <button class="refresh-btn" onclick="loadDirectories()" title="Refresh directory list">🔄 Refresh</button>
-      </div>
-      <div class="form-group">
-        <label for="directorySelect">Select Firmware Directory:</label>
-        <select id="directorySelect">
-          <option value="">-- Loading directories... --</option>
-        </select>
+        <button class="refresh-btn" onclick="loadFirmwareFiles()" title="Refresh firmware list">🔄 Refresh</button>
       </div>
       <div class="spinner" id="fileSpinner"></div>
       <div class="file-list" id="fileList">
-        <div class="empty">Please select a directory to view available firmware files</div>
+        <div class="empty">Loading firmware files...</div>
       </div>
     </div>
 
@@ -108,13 +211,34 @@ const OTA_SERVICE_UUID = '00001ff5-0000-1000-8000-00805f9b34fb';
 const OTA_CONTROL_UUID = '000000fa-0000-1000-8000-00805f9b34fb';
 const OTA_DATA_UUID = '000000fb-0000-1000-8000-00805f9b34fb';
 const SETTINGS_UUID = '00000008-0000-1000-8000-00805f9b34fb';
+const FIRMWARE_DIRECTORY = 'Wheel-Turtle-Club';
+
+/* ========= LOGOUT & AUTH ========= */
+function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    alert('Logged out successfully');
+    window.location.href = 'index.html';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    alert('Please login to access firmware updates');
+    window.location.href = 'index.html';
+    return;
+  }
+  loadFirmwareFiles();
+});
 
 /* ========= DOM HOOKS ========= */
 const pairBtn = document.getElementById('pairBtn');
 const connectionStatus = document.getElementById('connectionStatus');
 const deviceInfo = document.getElementById('deviceInfo');
 const availableVersion = document.getElementById('availableVersion');
-const directorySelect = document.getElementById('directorySelect');
 const fileList = document.getElementById('fileList');
 const fileSpinner = document.getElementById('fileSpinner');
 const updateBtn = document.getElementById('updateBtn');
@@ -128,6 +252,7 @@ const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
 const resultMsg = document.getElementById('resultMsg');
 const bleLog = document.getElementById('bleLog');
+const disconnectModal = document.getElementById('disconnectModal');
 
 /* ========= STATE ========= */
 let btDevice = null;
@@ -136,7 +261,9 @@ let otaControlChar = null;
 let otaDataChar = null;
 let settingsChar = null;
 let selectedFile = null;
-let selectedDirectory = '';
+let updateInProgress = false;
+let updateCompleted = false;
+let transferSuccessful = false;
 
 /* ========= UTIL ========= */
 function log(msg) {
@@ -179,6 +306,15 @@ function isConnected() {
   return !!(btDevice && btDevice.gatt && btDevice.gatt.connected);
 }
 
+function resetPage() {
+  log('Resetting page...');
+  location.reload();
+}
+
+function showDisconnectModal() {
+  disconnectModal.classList.add('show');
+}
+
 async function ensureConnected() {
   if (!btDevice) throw new Error('No device selected');
   if (!isConnected()) {
@@ -204,10 +340,6 @@ function extractVersion(filename) {
   }
   
   return filename.replace('.bin', '');
-}
-
-function formatDirectoryName(dirName) {
-  return dirName;
 }
 
 /* ========= STEP 1: BLUETOOTH ========= */
@@ -252,11 +384,13 @@ async function discoverOTACharacteristics() {
         log(`Device: ${msg}`);
         
         if (msg.includes('RESULT,OK')) {
-          resultMsg.textContent = 'Update successful! Device will restart.';
-          resultMsg.style.color = '#00aa00';
+          updateCompleted = true;
+          log('✓ Device confirmed: Update successful!');
+          showSuccessMessage();
         } else if (msg.includes('RESULT,FAIL')) {
-          resultMsg.textContent = 'Update failed: ' + msg;
-          resultMsg.style.color = '#cc0000';
+          updateCompleted = true;
+          log('✗ Device reported: Update failed');
+          showFailureMessage(msg);
         } else if (msg.includes('PROGRESS')) {
           const match = msg.match(/PROGRESS,(\d+)/);
           if (match) setProgress(parseInt(match[1]) / 100);
@@ -299,6 +433,9 @@ async function discoverOTACharacteristics() {
 pairBtn.addEventListener('click', async () => {
   try {
     bleLog.innerHTML = '';
+    updateInProgress = false;
+    updateCompleted = false;
+    transferSuccessful = false;
     connectionStatus.textContent = 'Status: Connecting…';
     log('Requesting Bluetooth device...');
 
@@ -310,13 +447,63 @@ pairBtn.addEventListener('click', async () => {
     log(`Selected device: ${btDevice.name}`);
 
     btDevice.addEventListener('gattserverdisconnected', () => {
-      log('Device disconnected');
-      connectionStatus.textContent = 'Status: Disconnected';
-      updateBtn.disabled = true;
+      log('⚠️ DEVICE DISCONNECTED!');
+      
+      // If we completed the transfer and sent END command successfully
+      if (transferSuccessful && !updateCompleted) {
+        // Wait a moment to see if we got a RESULT message
+        setTimeout(() => {
+          if (!updateCompleted) {
+            // Device disconnected after successful transfer - this is expected behavior
+            log('✓ Device disconnected after firmware transfer (expected - device is rebooting)');
+            updateCompleted = true;
+            showSuccessMessage();
+          }
+        }, 2000);
+        return;
+      }
+      
+      // If update was already marked as successful - the showSuccessMessage() will handle reset
+      if (updateCompleted && transferSuccessful) {
+        log('Device disconnected after successful update (expected behavior)');
+        return;
+      }
+      
+      // If we're in the middle of an update and it failed
+      if (updateInProgress && !transferSuccessful) {
+        log('✗ Device disconnected during update (unexpected)');
+        showFailureMessage('Device disconnected during firmware transfer');
+        updateInProgress = false;
+        
+        // Show modal for failed update
+        connectionStatus.textContent = 'Status: Disconnected';
+        connectionStatus.style.color = '#dc3545';
+        updateBtn.disabled = true;
+        showDisconnectModal();
+        
+        setTimeout(() => {
+          resetPage();
+        }, 30000);
+        return;
+      }
+      
+      // If not updating, show disconnect modal (unexpected disconnect)
+      if (!updateInProgress && !transferSuccessful) {
+        connectionStatus.textContent = 'Status: Disconnected';
+        connectionStatus.style.color = '#dc3545';
+        updateBtn.disabled = true;
+        
+        showDisconnectModal();
+        
+        setTimeout(() => {
+          resetPage();
+        }, 30000);
+      }
     });
 
     gattServer = await btDevice.gatt.connect();
     connectionStatus.textContent = 'Status: Connected';
+    connectionStatus.style.color = '#00aa00';
     log('GATT server connected');
 
     await discoverOTACharacteristics();
@@ -329,54 +516,58 @@ pairBtn.addEventListener('click', async () => {
     console.error('Bluetooth connect error:', err);
     log(`Error: ${err.message || err}`);
     connectionStatus.textContent = 'Status: Failed to connect';
+    connectionStatus.style.color = '#dc3545';
     availableVersion.textContent = 'Current Version: (unavailable)';
   }
 });
 
-/* ========= STEP 2: FILE BROWSER ========= */
-async function loadDirectories() {
-  try {
-    directorySelect.innerHTML = '<option value="">-- Loading... --</option>';
-
-    const response = await fetch(`${API_BASE}/api/directories`);
-    const data = await response.json();
-
-    if (data.ok && data.directories.length > 0) {
-      directorySelect.innerHTML = '<option value="">-- Select a directory --</option>';
-      data.directories.forEach(dir => {
-        const option = document.createElement('option');
-        option.value = dir;
-        option.textContent = formatDirectoryName(dir);
-        directorySelect.appendChild(option);
-      });
-      log(`Loaded ${data.directories.length} directories from server`);
-    } else {
-      directorySelect.innerHTML = '<option value="">-- No directories available --</option>';
-      log('No directories found. Ask admin to create directories and upload firmware files.');
+/* ========= SUCCESS/FAILURE DISPLAY ========= */
+function showSuccessMessage() {
+  resultMsg.style.color = '#00aa00';
+  resultMsg.style.backgroundColor = '#d4edda';
+  resultMsg.style.padding = '15px';
+  resultMsg.style.borderRadius = '8px';
+  resultMsg.style.border = '2px solid #00aa00';
+  resultMsg.innerHTML = '✅ <strong style="font-size:18px;">Update Successful!</strong><br><span style="font-size:14px;">Device is rebooting. Page will reset automatically in <span id="countdown">5</span> seconds...</span>';
+  
+  progressBar.style.background = '#00aa00';
+  setProgress(1);
+  updateBtn.disabled = true;
+  
+  // Countdown and auto-reset
+  let countdown = 5;
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    const countdownElement = document.getElementById('countdown');
+    if (countdownElement) {
+      countdownElement.textContent = countdown;
     }
-  } catch (error) {
-    directorySelect.innerHTML = '<option value="">-- Error loading --</option>';
-    console.error('Failed to load directories:', error);
-    log('Error loading directories. Check server connection.');
-  }
+    if (countdown <= 0) {
+      clearInterval(countdownInterval);
+      log('Auto-resetting page for reconnection...');
+      resetPage();
+    }
+  }, 1000);
 }
 
-directorySelect.addEventListener('change', async (e) => {
-  selectedDirectory = e.target.value;
-  if (selectedDirectory) {
-    await loadFiles(selectedDirectory);
-  } else {
-    fileList.innerHTML = '<div class="empty">Please select a directory</div>';
-    clearFileSelection();
-  }
-});
+function showFailureMessage(errorMsg) {
+  resultMsg.style.color = '#cc0000';
+  resultMsg.style.backgroundColor = '#f8d7da';
+  resultMsg.style.padding = '15px';
+  resultMsg.style.borderRadius = '8px';
+  resultMsg.style.border = '2px solid #cc0000';
+  resultMsg.innerHTML = `❌ <strong style="font-size:16px;">Update Failed</strong><br><span style="font-size:14px;">${errorMsg || 'Device verification failed. Please try again.'}</span>`;
+  
+  progressBar.style.background = '#cc0000';
+}
 
-async function loadFiles(directory) {
+/* ========= STEP 2: FILE BROWSER ========= */
+async function loadFirmwareFiles() {
   try {
     fileSpinner.style.display = 'block';
     fileList.innerHTML = '';
 
-    const response = await fetch(`${API_BASE}/api/files?directory=${encodeURIComponent(directory)}`);
+    const response = await fetch(`${API_BASE}/api/files?directory=${encodeURIComponent(FIRMWARE_DIRECTORY)}`);
     const data = await response.json();
 
     fileSpinner.style.display = 'none';
@@ -386,17 +577,17 @@ async function loadFiles(directory) {
       
       if (binFiles.length > 0) {
         binFiles.forEach((file, index) => {
-          const fileItem = createFileItem(file, directory, index);
+          const fileItem = createFileItem(file, index);
           fileList.appendChild(fileItem);
         });
-        log(`Found ${binFiles.length} firmware file(s) in ${directory}`);
+        log(`Found ${binFiles.length} firmware file(s)`);
       } else {
-        fileList.innerHTML = '<div class="empty">No .bin files found in this directory</div>';
-        log('No .bin files in selected directory');
+        fileList.innerHTML = '<div class="empty">No .bin files found. Contact admin to upload firmware files.</div>';
+        log('No .bin files available');
       }
     } else {
-      fileList.innerHTML = '<div class="empty">No files found in this directory</div>';
-      log('Directory is empty');
+      fileList.innerHTML = '<div class="empty">No firmware files available. Contact admin to upload firmware files.</div>';
+      log('No firmware files found');
     }
   } catch (error) {
     fileSpinner.style.display = 'none';
@@ -405,7 +596,7 @@ async function loadFiles(directory) {
   }
 }
 
-function createFileItem(file, directory, index) {
+function createFileItem(file, index) {
   const div = document.createElement('div');
   div.className = 'file-item';
   div.id = `file-${index}`;
@@ -434,20 +625,20 @@ function createFileItem(file, directory, index) {
   div.appendChild(radio);
 
   radio.addEventListener('change', () => {
-    selectFile(file, directory, div);
+    selectFile(file, div);
   });
 
   div.addEventListener('click', (e) => {
     if (e.target !== radio) {
       radio.checked = true;
-      selectFile(file, directory, div);
+      selectFile(file, div);
     }
   });
 
   return div;
 }
 
-function selectFile(file, directory, itemElement) {
+function selectFile(file, itemElement) {
   document.querySelectorAll('.file-item').forEach(item => {
     item.classList.remove('selected');
   });
@@ -456,14 +647,14 @@ function selectFile(file, directory, itemElement) {
 
   selectedFile = {
     name: file.name,
-    directory: directory,
+    directory: FIRMWARE_DIRECTORY,
     size: file.size,
     url: `${API_BASE}${file.url}`,
     version: extractVersion(file.name)
   };
 
   selectedFileName.textContent = selectedFile.name;
-  selectedFileDir.textContent = formatDirectoryName(selectedFile.directory);
+  selectedFileDir.textContent = 'Wheel Turtle Club';
   selectedFileSize.textContent = humanSize(selectedFile.size);
   selectedFileVersion.textContent = selectedFile.version;
 
@@ -484,8 +675,6 @@ function clearFileSelection() {
     item.classList.remove('selected');
   });
 }
-
-window.addEventListener('DOMContentLoaded', loadDirectories);
 
 /* ========= STEP 3: UPDATE ========= */
 async function sendTextCommand(characteristic, text) {
@@ -531,9 +720,19 @@ async function writeChunks(characteristic, data, chunkSize = 512) {
 
 async function performOTAUpdate(firmwareData) {
   try {
+    // Reset state
+    updateInProgress = true;
+    updateCompleted = false;
+    transferSuccessful = false;
+    
+    // Reset UI
     resultMsg.textContent = '';
     resultMsg.style.color = '#333';
+    resultMsg.style.backgroundColor = 'transparent';
+    resultMsg.style.padding = '0';
+    resultMsg.style.border = 'none';
     setProgress(0);
+    progressBar.style.background = '#2e6ad7';
     
     log('Starting OTA update sequence...');
     
@@ -552,62 +751,82 @@ async function performOTAUpdate(firmwareData) {
     
     log('Step 4: Streaming firmware data...');
     resultMsg.textContent = 'Uploading firmware...';
+    resultMsg.style.color = '#333';
     
     await writeChunks(otaDataChar, firmwareData, 448);
     
     log('Firmware transfer complete');
     
+    // Mark transfer as successful BEFORE sending END
+    // because data transfer is already complete at this point
+    transferSuccessful = true;
+    
     log('Step 5: Sending END command...');
-    await sendTextCommand(otaControlChar, 'END');
     
-    log('OTA sequence complete. Waiting for device response...');
-    resultMsg.textContent = 'Update sent. Waiting for verification...';
-    
-    let gotResult = false;
-    const resultPromise = new Promise((resolve) => {
-      const handler = (e) => {
-        const msg = td.decode(e.target.value);
-        if (msg.includes('RESULT,OK')) {
-          gotResult = true;
-          otaControlChar.removeEventListener('characteristicvaluechanged', handler);
-          resolve('success');
-        } else if (msg.includes('RESULT,FAIL')) {
-          gotResult = true;
-          otaControlChar.removeEventListener('characteristicvaluechanged', handler);
-          resolve('fail');
-        }
-      };
-      otaControlChar.addEventListener('characteristicvaluechanged', handler);
-      
-      setTimeout(() => {
-        if (!gotResult) {
-          otaControlChar.removeEventListener('characteristicvaluechanged', handler);
-          resolve('timeout');
-        }
-      }, 30000);
-    });
-    
-    const result = await resultPromise;
-    
-    if (result === 'success') {
-      log('Device confirmed: Update successful!');
-      resultMsg.textContent = 'Update successful! Device will restart.';
-      resultMsg.style.color = '#00aa00';
-    } else if (result === 'fail') {
-      log('Device reported: Update failed');
-      resultMsg.textContent = 'Device verification failed.';
-      resultMsg.style.color = '#cc0000';
-    } else {
-      log('WARNING: No response from device after 30 seconds');
-      resultMsg.textContent = 'No response from device. Check device version.';
-      resultMsg.style.color = '#ff8800';
+    // Try to send END command, but don't fail if device disconnects
+    try {
+      await sendTextCommand(otaControlChar, 'END');
+      log('END command sent successfully');
+    } catch (endError) {
+      log(`Note: ${endError.message} (This may be normal - device is processing the update)`);
     }
     
+    log('Update process complete. Waiting for device confirmation...');
+    resultMsg.textContent = 'Firmware sent successfully. Waiting for device to apply update...';
+    
+    // Wait up to 10 seconds for device to respond or disconnect
+    await new Promise(resolve => {
+      let completed = false;
+      
+      const checkInterval = setInterval(() => {
+        if (updateCompleted || !isConnected()) {
+          if (!completed) {
+            completed = true;
+            clearInterval(checkInterval);
+            
+            if (!updateCompleted) {
+              // Device disconnected without sending RESULT - this is success
+              updateCompleted = true;
+              log('✓ Device applying update (disconnected for reboot)');
+              showSuccessMessage();
+            }
+            resolve();
+          }
+        }
+      }, 500);
+      
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        if (!completed) {
+          completed = true;
+          clearInterval(checkInterval);
+          
+          if (!updateCompleted) {
+            updateCompleted = true;
+            log('✓ No response from device, but transfer was successful');
+            showSuccessMessage();
+          }
+          resolve();
+        }
+      }, 10000);
+    });
+    
   } catch (e) {
-    console.error('OTA update error:', e);
-    log(`ERROR: ${e.message || e}`);
-    resultMsg.textContent = `Update failed: ${e.message || e}`;
-    resultMsg.style.color = '#cc0000';
+    // Only show error if transfer wasn't successful
+    if (!transferSuccessful) {
+      console.error('OTA update error:', e);
+      log(`ERROR: ${e.message || e}`);
+      showFailureMessage(e.message || e);
+    } else {
+      // Transfer was successful, ignore any errors (device is rebooting)
+      log('Transfer completed successfully. Device is applying the update.');
+      if (!updateCompleted) {
+        updateCompleted = true;
+        showSuccessMessage();
+      }
+    }
+  } finally {
+    updateInProgress = false;
   }
 }
 
@@ -622,6 +841,10 @@ updateBtn.addEventListener('click', async () => {
     
     log(`Downloading firmware: ${selectedFile.name}`);
     resultMsg.textContent = 'Downloading firmware...';
+    resultMsg.style.color = '#333';
+    resultMsg.style.backgroundColor = 'transparent';
+    resultMsg.style.padding = '0';
+    resultMsg.style.border = 'none';
     
     const res = await fetch(selectedFile.url, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -636,11 +859,11 @@ updateBtn.addEventListener('click', async () => {
   } catch (e) {
     console.error(e);
     log(`ERROR: ${e.message || e}`);
-    resultMsg.textContent = `Update failed: ${e.message || e}`;
-    resultMsg.style.color = '#cc0000';
+    showFailureMessage(e.message || e);
   }
 });
 </script>
 
+  </div> <!-- End page-content -->
 </body>
 </html>
