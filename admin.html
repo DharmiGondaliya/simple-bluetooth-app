@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Team Plus - Admin Panel</title>
   <style>
-    * { box-sizing: border-box; }
-    
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -49,6 +47,22 @@
 
     .navbar ul li a:hover {
       text-decoration: underline;
+    }
+
+    .navbar button {
+      background: transparent;
+      border: 2px solid white;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .navbar button:hover {
+      background: white;
+      color: #003366;
     }
 
     /* Container */
@@ -100,6 +114,7 @@
       border: 2px solid #cce0ff;
       border-radius: 8px;
       font-size: 14px;
+      box-sizing: border-box;
     }
 
     .form-group input:focus,
@@ -138,36 +153,16 @@
       background: #c82333;
     }
 
-    /* Directory List */
-    .directory-list {
-      margin-top: 20px;
-    }
-
-    .directory-item {
-      background: #f8f9fa;
-      border: 2px solid #cce0ff;
-      padding: 15px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-    }
-
-    .directory-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .directory-item h3 {
-      margin: 0;
-      color: #003366;
-      font-size: 18px;
-    }
-
-    .directory-item .dir-path {
-      margin: 5px 0;
-      color: #666;
+    .btn-warning {
+      background: #ffc107;
+      padding: 8px 16px;
       font-size: 13px;
+      color: #000;
+      margin-right: 8px;
+    }
+
+    .btn-warning:hover {
+      background: #e0a800;
     }
 
     /* File List */
@@ -202,6 +197,11 @@
     .file-meta {
       font-size: 12px;
       color: #666;
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 8px;
     }
 
     .message {
@@ -248,6 +248,79 @@
     .refresh-btn:hover {
       background: #138496;
     }
+
+    .user-info {
+      font-size: 13px;
+      color: #cce0ff;
+      margin-left: 20px;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 30px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      color: #003366;
+      margin-bottom: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .device-card {
+      background: #f8f9fa;
+      border: 2px solid #cce0ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .device-card h3 {
+      margin: 0 0 10px 0;
+      color: #003366;
+      font-size: 20px;
+    }
+
+    .device-path {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
@@ -255,11 +328,14 @@
 <!-- Navbar -->
 <div class="navbar">
   <div class="logo">TEAM PLUS ADMIN</div>
-  <ul>
-    <li><a href="dashboard.html">Dashboard</a></li>
-    <li><a href="admin.html">Admin Panel</a></li>
-    <li><a href="firmware-wt1-rr.html">Firmware Update</a></li>
-  </ul>
+  <div style="display: flex; align-items: center;">
+    <span class="user-info" id="userInfo">👤 Loading...</span>
+    <ul>
+      <li><a href="firmware-select.html">Dashboard</a></li>
+      <li><a href="admin.html">Admin Panel</a></li>
+      <li><button onclick="adminLogout()">Logout</button></li>
+    </ul>
+  </div>
 </div>
 
 <div class="container">
@@ -268,34 +344,26 @@
   <!-- Messages -->
   <div id="messageContainer"></div>
 
-  <!-- Create Directory Section -->
+  <!-- Select Device Section -->
   <div class="section">
-    <h2>📁 Create New Directory</h2>
-    <form id="createDirForm">
-      <div class="form-group">
-        <label for="newDirName">Directory Name:</label>
-        <input 
-          type="text" 
-          id="newDirName" 
-          placeholder="e.g., firmware 2025 or wheel-turtle-pro-v2" 
-          required
-        >
-        <small style="color: #666;">You can use letters, numbers, spaces, hyphens, and underscores</small>
-      </div>
-      <button type="submit">Create Directory</button>
-    </form>
+    <h2>📱 Select Device</h2>
+    <div class="form-group">
+      <label for="deviceSelect">Choose Device Type:</label>
+      <select id="deviceSelect" onchange="loadDeviceFiles()">
+        <option value="">-- Select a device --</option>
+        <option value="CANGate">CANGate – Firmware Update Packages</option>
+        <option value="Wheel-Turtle-Club">Wheel Turtle Club (Battery Powered Model)</option>
+        <option value="Wheel-Turtle-PRO">Wheel Turtle PRO (Hard Wired Model)</option>
+        <option value="Brake-Turtle-PRO">Brake Turtle PRO</option>
+        <option value="Telelogger">Telelogger</option>
+      </select>
+    </div>
   </div>
 
   <!-- Upload File Section -->
-  <div class="section">
+  <div class="section" id="uploadSection" style="display:none;">
     <h2>📤 Upload Firmware File</h2>
     <form id="uploadFileForm">
-      <div class="form-group">
-        <label for="uploadDir">Select Directory:</label>
-        <select id="uploadDir" required>
-          <option value="">-- Select a directory --</option>
-        </select>
-      </div>
       <div class="form-group">
         <label for="fileUpload">Choose File (.bin only):</label>
         <input 
@@ -316,30 +384,140 @@
     </form>
   </div>
 
-  <!-- Manage Directories Section -->
-  <div class="section">
+  <!-- Manage Files Section -->
+  <div class="section" id="filesSection" style="display:none;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h2 style="margin: 0;">📂 Current Directories & Files</h2>
-      <button class="refresh-btn" onclick="loadDirectories()">🔄 Refresh</button>
+      <h2 style="margin: 0;">📂 Current Files</h2>
+      <button class="refresh-btn" onclick="loadDeviceFiles()">🔄 Refresh</button>
     </div>
-    <div id="directoriesLoading" class="loading">Loading directories...</div>
-    <div id="directoriesList" class="directory-list"></div>
+    
+    <div class="device-card" id="deviceCard">
+      <h3 id="deviceTitle">Device Name</h3>
+      <div class="device-path" id="devicePath">Path: public/firmware/</div>
+    </div>
+
+    <div id="filesLoading" class="loading">Loading files...</div>
+    <div id="filesList" class="file-list"></div>
+  </div>
+</div>
+
+<!-- Rename File Modal -->
+<div id="renameModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">✏️ Rename File</div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="newFileName">New File Name:</label>
+        <input 
+          type="text" 
+          id="newFileName" 
+          placeholder="Enter new filename (must end with .bin)"
+        >
+        <small style="color: #666; display: block; margin-top: 5px;">
+          Current: <span id="currentFileName" style="font-weight: bold;"></span>
+        </small>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeRenameModal()">Cancel</button>
+      <button onclick="confirmRename()">Rename</button>
+    </div>
   </div>
 </div>
 
 <script>
+/* ========================================
+   AUTHENTICATION CHECK
+   ======================================== */
 const API_BASE = 'http://localhost:3000';
 
+async function checkAdminAuth() {
+  const token = localStorage.getItem('authToken');
+  const role = localStorage.getItem('userRole');
+  const email = localStorage.getItem('userEmail');
+  
+  // Display user info
+  const userInfo = document.getElementById('userInfo');
+  if (email) {
+    userInfo.textContent = `👤 ${email}`;
+  }
+  
+  if (!token || role !== 'admin') {
+    alert('🔒 Admin login required. Redirecting to login page...');
+    window.location.href = 'admin-login.html';
+    return false;
+  }
+
+  try {
+    const resp = await fetch(`${API_BASE}/auth/verify-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+
+    const data = await resp.json();
+
+    if (!data.valid || data.role !== 'admin') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userEmail');
+      alert('⚠️ Session expired or invalid. Please login again.');
+      window.location.href = 'admin-login.html';
+      return false;
+    }
+    
+    console.log('✓ Admin authenticated:', data.email);
+    return true;
+  } catch (err) {
+    console.error('Auth check error:', err);
+    return true;
+  }
+}
+
+// Logout function
+function adminLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    alert('✓ Logged out successfully');
+    window.location.href = 'admin-login.html';
+  }
+}
+
+/* ========================================
+   ADMIN PANEL FUNCTIONALITY
+   ======================================== */
+
 // DOM Elements
-const createDirForm = document.getElementById('createDirForm');
 const uploadFileForm = document.getElementById('uploadFileForm');
-const uploadDir = document.getElementById('uploadDir');
-const directoriesList = document.getElementById('directoriesList');
-const directoriesLoading = document.getElementById('directoriesLoading');
 const messageContainer = document.getElementById('messageContainer');
 const uploadProgress = document.getElementById('uploadProgress');
 const uploadProgressBar = document.getElementById('uploadProgressBar');
 const uploadProgressText = document.getElementById('uploadProgressText');
+const renameModal = document.getElementById('renameModal');
+const newFileNameInput = document.getElementById('newFileName');
+const currentFileNameSpan = document.getElementById('currentFileName');
+const deviceSelect = document.getElementById('deviceSelect');
+const uploadSection = document.getElementById('uploadSection');
+const filesSection = document.getElementById('filesSection');
+const deviceTitle = document.getElementById('deviceTitle');
+const devicePath = document.getElementById('devicePath');
+const filesList = document.getElementById('filesList');
+const filesLoading = document.getElementById('filesLoading');
+
+// State
+let selectedDevice = '';
+let renameFileData = { directory: '', oldName: '' };
+
+// Device name mapping
+const deviceNames = {
+  'CANGate': 'CANGate – Firmware Update Packages',
+  'Wheel-Turtle-Club': 'Wheel Turtle Club (Battery Powered Model)',
+  'Wheel-Turtle-PRO': 'Wheel Turtle PRO (Hard Wired Model)',
+  'Brake-Turtle-PRO': 'Brake Turtle PRO',
+  'Telelogger': 'Telelogger'
+};
 
 // Utility Functions
 function showMessage(msg, type = 'success') {
@@ -353,7 +531,6 @@ function showMessage(msg, type = 'success') {
     msgDiv.style.display = 'none';
   }, 5000);
   
-  // Scroll to top to see message
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -369,51 +546,111 @@ function humanSize(bytes) {
   return `${size.toFixed(1)} ${units[i]}`;
 }
 
-function formatDirectoryName(dirName) {
-  return dirName;
-}
+// Load Device Files
+async function loadDeviceFiles() {
+  selectedDevice = deviceSelect.value;
+  
+  if (!selectedDevice) {
+    uploadSection.style.display = 'none';
+    filesSection.style.display = 'none';
+    return;
+  }
 
-// Create Directory
-createDirForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const dirName = document.getElementById('newDirName').value.trim();
+  // Show sections
+  uploadSection.style.display = 'block';
+  filesSection.style.display = 'block';
 
+  // Update device info
+  deviceTitle.textContent = `📁 ${deviceNames[selectedDevice]}`;
+  devicePath.textContent = `Path: public/firmware/${selectedDevice}`;
+
+  // Load files
   try {
-    const response = await fetch(`${API_BASE}/api/directories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: dirName })
-    });
+    filesLoading.style.display = 'block';
+    filesList.innerHTML = '';
 
+    const response = await fetch(`${API_BASE}/api/files?directory=${encodeURIComponent(selectedDevice)}`);
     const data = await response.json();
 
-    if (data.ok) {
-      showMessage(`✅ Directory "${dirName}" created successfully!`, 'success');
-      createDirForm.reset();
-      await loadDirectories();
+    filesLoading.style.display = 'none';
+
+    if (data.ok && data.files.length > 0) {
+      const binFiles = data.files.filter(file => file.name.endsWith('.bin'));
+      
+      if (binFiles.length > 0) {
+        binFiles.forEach(file => {
+          const fileDiv = createFileItem(file);
+          filesList.appendChild(fileDiv);
+        });
+        console.log(`Loaded ${binFiles.length} firmware file(s)`);
+      } else {
+        filesList.innerHTML = '<div class="empty">📭 No .bin files found in this device</div>';
+      }
     } else {
-      showMessage(`❌ ${data.error}`, 'error');
+      filesList.innerHTML = '<div class="empty">📭 No files found. Upload firmware files above.</div>';
     }
   } catch (error) {
-    showMessage('❌ Network error creating directory', 'error');
-    console.error(error);
+    filesLoading.style.display = 'none';
+    filesList.innerHTML = '<div class="empty" style="color:#dc3545;">❌ Error loading files</div>';
+    console.error('Error loading files:', error);
   }
-});
+}
+
+// Create File Item
+function createFileItem(file) {
+  const fileDiv = document.createElement('div');
+  fileDiv.className = 'file-item';
+
+  const fileInfo = document.createElement('div');
+  fileInfo.className = 'file-info';
+
+  const fileName = document.createElement('div');
+  fileName.className = 'file-name';
+  fileName.textContent = file.name;
+
+  const fileMeta = document.createElement('div');
+  fileMeta.className = 'file-meta';
+  fileMeta.textContent = `Size: ${humanSize(file.size)} | Modified: ${new Date(file.modified).toLocaleString()}`;
+
+  fileInfo.appendChild(fileName);
+  fileInfo.appendChild(fileMeta);
+
+  const fileActions = document.createElement('div');
+  fileActions.className = 'file-actions';
+
+  const renameBtn = document.createElement('button');
+  renameBtn.className = 'btn-warning';
+  renameBtn.textContent = '✏️ Rename';
+  renameBtn.onclick = () => openRenameModal(selectedDevice, file.name);
+
+  const deleteFileBtn = document.createElement('button');
+  deleteFileBtn.className = 'btn-danger';
+  deleteFileBtn.textContent = '🗑️ Delete';
+  deleteFileBtn.onclick = () => deleteFile(selectedDevice, file.name);
+
+  fileActions.appendChild(renameBtn);
+  fileActions.appendChild(deleteFileBtn);
+
+  fileDiv.appendChild(fileInfo);
+  fileDiv.appendChild(fileActions);
+
+  return fileDiv;
+}
 
 // Upload File
 uploadFileForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const directory = uploadDir.value;
+  
+  if (!selectedDevice) {
+    showMessage('❌ Please select a device first', 'error');
+    return;
+  }
+
   const fileInput = document.getElementById('fileUpload');
   const file = fileInput.files[0];
 
   if (!file) {
     showMessage('❌ Please select a file', 'error');
-    return;
-  }
-
-  if (!directory) {
-    showMessage('❌ Please select a directory', 'error');
     return;
   }
 
@@ -423,7 +660,7 @@ uploadFileForm.addEventListener('submit', async (e) => {
   }
 
   const formData = new FormData();
-  formData.append('directory', directory);  // IMPORTANT: directory must come FIRST
+  formData.append('directory', selectedDevice);
   formData.append('file', file);
 
   const uploadBtn = document.getElementById('uploadBtn');
@@ -449,25 +686,15 @@ uploadFileForm.addEventListener('submit', async (e) => {
           if (data.ok) {
             showMessage(`✅ File "${file.name}" uploaded successfully!`, 'success');
             uploadFileForm.reset();
-            await loadDirectories();
+            await loadDeviceFiles();
           } else {
             showMessage(`❌ Upload failed: ${data.error || 'Unknown error'}`, 'error');
-            console.error('Upload error:', data);
           }
         } catch (parseError) {
           showMessage('❌ Error parsing server response', 'error');
-          console.error('Parse error:', parseError, xhr.responseText);
         }
       } else {
-        let errorMsg = `HTTP ${xhr.status}`;
-        try {
-          const errorData = JSON.parse(xhr.responseText);
-          errorMsg = errorData.error || errorMsg;
-        } catch (e) {
-          errorMsg = xhr.responseText || errorMsg;
-        }
-        showMessage(`❌ Upload failed: ${errorMsg}`, 'error');
-        console.error('HTTP error:', xhr.status, xhr.responseText);
+        showMessage(`❌ Upload failed: HTTP ${xhr.status}`, 'error');
       }
       
       uploadBtn.disabled = false;
@@ -495,6 +722,79 @@ uploadFileForm.addEventListener('submit', async (e) => {
   }
 });
 
+// Rename File Functions
+function openRenameModal(directory, filename) {
+  renameFileData = { directory, oldName: filename };
+  currentFileNameSpan.textContent = filename;
+  newFileNameInput.value = filename;
+  renameModal.style.display = 'block';
+  
+  setTimeout(() => {
+    newFileNameInput.focus();
+    const dotIndex = filename.lastIndexOf('.');
+    if (dotIndex > 0) {
+      newFileNameInput.setSelectionRange(0, dotIndex);
+    }
+  }, 100);
+}
+
+function closeRenameModal() {
+  renameModal.style.display = 'none';
+  renameFileData = { directory: '', oldName: '' };
+  newFileNameInput.value = '';
+}
+
+async function confirmRename() {
+  const newName = newFileNameInput.value.trim();
+  
+  if (!newName) {
+    alert('❌ Please enter a new filename');
+    return;
+  }
+
+  if (!newName.endsWith('.bin')) {
+    alert('❌ Filename must end with .bin extension');
+    return;
+  }
+
+  if (newName === renameFileData.oldName) {
+    alert('❌ New filename is the same as the old one');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/files/rename`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        directory: renameFileData.directory,
+        oldName: renameFileData.oldName,
+        newName: newName
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.ok) {
+      showMessage(`✅ File renamed from "${renameFileData.oldName}" to "${newName}"`, 'success');
+      closeRenameModal();
+      await loadDeviceFiles();
+    } else {
+      showMessage(`❌ ${data.error}`, 'error');
+    }
+  } catch (error) {
+    showMessage('❌ Network error renaming file', 'error');
+    console.error(error);
+  }
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+  if (event.target === renameModal) {
+    closeRenameModal();
+  }
+}
+
 // Delete File
 async function deleteFile(directory, filename) {
   if (!confirm(`Are you sure you want to delete "${filename}"?\n\nThis action cannot be undone.`)) {
@@ -512,7 +812,7 @@ async function deleteFile(directory, filename) {
 
     if (data.ok) {
       showMessage(`✅ File "${filename}" deleted successfully!`, 'success');
-      await loadDirectories();
+      await loadDeviceFiles();
     } else {
       showMessage(`❌ ${data.error}`, 'error');
     }
@@ -522,155 +822,13 @@ async function deleteFile(directory, filename) {
   }
 }
 
-// Delete Directory
-async function deleteDirectory(dirName) {
-  if (!confirm(`⚠️ WARNING: Are you sure you want to delete the directory "${dirName}" and ALL its files?\n\nThis action cannot be undone!`)) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE}/api/directories/${encodeURIComponent(dirName)}`, {
-      method: 'DELETE'
-    });
-
-    const data = await response.json();
-
-    if (data.ok) {
-      showMessage(`✅ Directory "${dirName}" deleted successfully!`, 'success');
-      await loadDirectories();
-    } else {
-      showMessage(`❌ ${data.error}`, 'error');
-    }
-  } catch (error) {
-    showMessage('❌ Network error deleting directory', 'error');
-    console.error(error);
-  }
-}
-
-// Load Directories
-async function loadDirectories() {
-  try {
-    directoriesLoading.style.display = 'block';
-    directoriesList.innerHTML = '';
-
-    const response = await fetch(`${API_BASE}/api/directories`);
-    const data = await response.json();
-
-    directoriesLoading.style.display = 'none';
-
-    if (data.ok && data.directories.length > 0) {
-      // Update upload directory dropdown
-      uploadDir.innerHTML = '<option value="">-- Select a directory --</option>';
-      data.directories.forEach(dir => {
-        const option = document.createElement('option');
-        option.value = dir;
-        option.textContent = dir;
-        uploadDir.appendChild(option);
-      });
-
-      // Render each directory
-      for (const dir of data.directories) {
-        await renderDirectory(dir);
-      }
-    } else {
-      directoriesList.innerHTML = '<div class="empty">📭 No directories found. Create one above to get started!</div>';
-    }
-  } catch (error) {
-    directoriesLoading.style.display = 'none';
-    directoriesList.innerHTML = '<div class="empty" style="color:#dc3545;">❌ Error loading directories. Make sure the server is running.</div>';
-    console.error(error);
-  }
-}
-
-// Render Directory
-async function renderDirectory(dirName) {
-  const dirDiv = document.createElement('div');
-  dirDiv.className = 'directory-item';
-
-  const dirHeader = document.createElement('div');
-  dirHeader.className = 'directory-header';
-
-  const dirInfo = document.createElement('div');
-  
-  const dirTitle = document.createElement('h3');
-  dirTitle.textContent = `📁 ${dirName}`;
-  
-  const dirPath = document.createElement('div');
-  dirPath.className = 'dir-path';
-  dirPath.textContent = `Path: public/firmware/${dirName}`;
-
-  dirInfo.appendChild(dirTitle);
-  dirInfo.appendChild(dirPath);
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'btn-danger';
-  deleteBtn.textContent = '🗑️ Delete Directory';
-  deleteBtn.onclick = () => deleteDirectory(dirName);
-
-  dirHeader.appendChild(dirInfo);
-  dirHeader.appendChild(deleteBtn);
-  dirDiv.appendChild(dirHeader);
-
-  // Load files
-  try {
-    const response = await fetch(`${API_BASE}/api/files?directory=${encodeURIComponent(dirName)}`);
-    const data = await response.json();
-
-    if (data.ok && data.files.length > 0) {
-      const fileListDiv = document.createElement('div');
-      fileListDiv.className = 'file-list';
-      
-      const fileCount = document.createElement('div');
-      fileCount.style.marginBottom = '10px';
-      fileCount.style.fontWeight = 'bold';
-      fileCount.style.color = '#003366';
-      fileCount.textContent = `📄 ${data.files.length} file(s)`;
-      fileListDiv.appendChild(fileCount);
-
-      data.files.forEach(file => {
-        const fileDiv = document.createElement('div');
-        fileDiv.className = 'file-item';
-
-        const fileInfo = document.createElement('div');
-        fileInfo.className = 'file-info';
-
-        const fileName = document.createElement('div');
-        fileName.className = 'file-name';
-        fileName.textContent = file.name;
-
-        const fileMeta = document.createElement('div');
-        fileMeta.className = 'file-meta';
-        fileMeta.textContent = `Size: ${humanSize(file.size)} | Modified: ${new Date(file.modified).toLocaleString()}`;
-
-        fileInfo.appendChild(fileName);
-        fileInfo.appendChild(fileMeta);
-
-        const deleteFileBtn = document.createElement('button');
-        deleteFileBtn.className = 'btn-danger';
-        deleteFileBtn.textContent = '🗑️ Delete';
-        deleteFileBtn.onclick = () => deleteFile(dirName, file.name);
-
-        fileDiv.appendChild(fileInfo);
-        fileDiv.appendChild(deleteFileBtn);
-        fileListDiv.appendChild(fileDiv);
-      });
-
-      dirDiv.appendChild(fileListDiv);
-    } else {
-      const emptyMsg = document.createElement('div');
-      emptyMsg.className = 'file-list';
-      emptyMsg.innerHTML = '<div class="empty" style="padding:15px;">📭 No files in this directory</div>';
-      dirDiv.appendChild(emptyMsg);
-    }
-  } catch (error) {
-    console.error('Error loading files for directory:', dirName, error);
-  }
-
-  directoriesList.appendChild(dirDiv);
-}
-
-// Load directories on page load
-window.addEventListener('DOMContentLoaded', loadDirectories);
+/* ========================================
+   INITIALIZE
+   ======================================== */
+checkAdminAuth().then(isAuthenticated => {
+  if (!isAuthenticated) return;
+  console.log('Admin authenticated successfully');
+});
 </script>
 
 </body>
